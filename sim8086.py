@@ -8,21 +8,21 @@ def read_binary(file_path: str):
         # print(f"{type(file)}: {str(file.read())}")
         return file.read()
 
-def dissasemble(v1, v2):
-    # converts to binary and removes '0b' prefix
-    bin1: str = bin(v1)[2:]
-    bin2: str = bin(v2)[2:]
-    op_code = bin1[:6]
+# 1011 w reg  data  data if w=1
+def immediate_to_reg(b1: str, b_list: list[int]) -> tuple[str, str, str]:
+    wide = b1[5]
+    reg = b1[6:]
+    pass
 
-    instruction = None
-    if op_code == "100010":
-        instruction = "mov"
-    dest = bin1[6]
-    wide = bin1[7]
+def regmem_to_regmem(b1: str, b_list: list[int]) -> tuple[str, str, str]:
+    dest = b1[6]
+    wide = b1[7]
 
-    mod = bin2[:2]
-    reg = bin2[2:5]
-    rm = bin2[5:]
+    b2: str = bin(b_list.pop(0))[2:]
+
+    mod = b2[:2]
+    reg = b2[2:5]
+    rm = b2[5:]
     # print(f"# op_code: {op_code}   dest: {dest}   wide: {wide}   mod: {mod}   reg: {reg}    rm: {rm}")
     #TODO mod is not used yet, right now it is between reg to reg
     reg, rm = (field_encW0[reg], field_encW0[rm]) if wide == '0' else (field_encW1[reg], field_encW1[rm]) 
@@ -30,19 +30,33 @@ def dissasemble(v1, v2):
     # checks the D (dest) bit to see which is dest and src
     dest, src = (reg, rm) if dest == '1' else (rm, reg)
     
-    return instruction, dest, src
+    return 'mov', dest, src
+
+def get_disassembly(b_list: list[int]) -> tuple[str, str, str]:
+    # converts to binary and removes '0b' prefix
+    b1: str = bin(b_list.pop(0))[2:]
+    if b1[:4] == '1011':
+        return immediate_to_reg()
+
+    if b1[:6] == '100010':
+        return regmem_to_regmem(b1, b_list)
+
+    raise ValueError("Wrong assembly instruction!")
 
 if __name__ == "__main__":
     print(f"; {sys.argv[1]}")
     print(f'bits 16')
     bytes = read_binary(sys.argv[1])
     b = io.BytesIO(bytes)
-    view = b.getbuffer()
-    for i in range(len(bytes)):
-        if i % 2 == 0:
-            continue
-        instr, dest, src = dissasemble(view[i-1], view[i])
+    b_list = b.getbuffer().tolist()
+    while b_list:
+        instr, dest, src = get_disassembly(b_list)
         print(f"{instr} {dest}, {src}")
+    # for i in range(len(bytes)):
+    #     if i % 2 == 0:
+    #         continue
+    #     instr, dest, src = get_disassembly(view[i-1], view[i])
+    #     print(f"{instr} {dest}, {src}")
 
 
 
