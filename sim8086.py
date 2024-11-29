@@ -10,16 +10,24 @@ def read_binary(file_path: str):
 
 # 1011 w reg  data  data if w=1
 def immediate_to_reg(b1: str, b_list: list[int]) -> tuple[str, str, str]:
-    wide = b1[5]
-    reg = b1[6:]
-    pass
+    # 10110001
+    # print(f'b1: {b1}')
+    wide = b1[4]
+    reg = b1[5:]
+    data = None
+    # if wide == '0':
+    #     data = f'{b_list.pop(0):08b}'
+    # else:
+    #     data = f'{b_list.pop(0):08b}{b_list.pop(0):08b}'
+    data = f'{b_list.pop(0):08b}' if wide == '0' else  f'{b_list.pop(0):08b}{b_list.pop(0):08b}'
+    # print(f'data: {data}')
+    reg= field_encW0[reg] if wide == '0' else field_encW1[reg] 
+    return 'mov', reg, int(data, 2)
 
 def regmem_to_regmem(b1: str, b_list: list[int]) -> tuple[str, str, str]:
     dest = b1[6]
     wide = b1[7]
-
     b2: str = bin(b_list.pop(0))[2:]
-
     mod = b2[:2]
     reg = b2[2:5]
     rm = b2[5:]
@@ -36,11 +44,9 @@ def get_disassembly(b_list: list[int]) -> tuple[str, str, str]:
     # converts to binary and removes '0b' prefix
     b1: str = bin(b_list.pop(0))[2:]
     if b1[:4] == '1011':
-        return immediate_to_reg()
-
+        return immediate_to_reg(b1, b_list)
     if b1[:6] == '100010':
         return regmem_to_regmem(b1, b_list)
-
     raise ValueError("Wrong assembly instruction!")
 
 if __name__ == "__main__":
