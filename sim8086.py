@@ -6,25 +6,17 @@ eff_addr_calc = {'000': 'bx + si', '001': 'bx + di', '010': 'bp + si', '011': 'b
 
 def read_binary(file_path: str):
     with open(file_path, 'rb') as file:
-        # print(f"{type(file)}: {str(file.read())}")
         return file.read()
 
-# 1011 w reg  data  data if w=1
+# 1011 w reg | data  data if w=1
 def immediate_to_reg(b1: str, b_list: list[int]) -> tuple[str, str, str]:
-    # 10110001
-    # print(f'b1: {b1}')
     wide = b1[4]
     reg = b1[5:]
-    data = None
-    # if wide == '0':
-    #     data = f'{b_list.pop(0):08b}'
-    # else:
-    #     data = f'{b_list.pop(0):08b}{b_list.pop(0):08b}'
     data = f'{b_list.pop(0):08b}' if wide == '0' else  f'{b_list.pop(1):08b}{b_list.pop(0):08b}'
-    # print(f'data: {data}')
     reg = field_encW0[reg] if wide == '0' else field_encW1[reg] 
     return 'mov', reg, int(data, 2)
 
+# 100010 d w | mod reg rm
 def regmem_to_regmem(b1: str, b_list: list[int]) -> tuple[str, str, str]:
     dest = b1[6]
     wide = b1[7]
@@ -33,7 +25,6 @@ def regmem_to_regmem(b1: str, b_list: list[int]) -> tuple[str, str, str]:
     reg = b2[2:5]
     rm = b2[5:]
     # print(f"# op_code: {b1[:6]}   dest: {dest}   wide: {wide}   mod: {mod}   reg: {reg}    rm: {rm}")
-
     # find register value field encoding
     reg = field_encW0[reg] if wide == '0' else field_encW1[reg] 
     if mod == '11':
@@ -48,10 +39,8 @@ def regmem_to_regmem(b1: str, b_list: list[int]) -> tuple[str, str, str]:
         dp = f'{b_list.pop(1):08b}{b_list.pop(0):08b}'
         dp_int = int(dp, 2)
         rm = f'[{eff_addr_calc[rm]} + {dp_int}]' if dp_int else f'[{eff_addr_calc[rm]}]' 
-
     # checks the D (dest) bit to see which is dest and src
     dest, src = (reg, rm) if dest == '1' else (rm, reg)
-    
     return 'mov', dest, src
 
 def get_disassembly(b_list: list[int]) -> tuple[str, str, str]:
@@ -72,11 +61,6 @@ if __name__ == "__main__":
     while b_list:
         instr, dest, src = get_disassembly(b_list)
         print(f"{instr} {dest}, {src}")
-    # for i in range(len(bytes)):
-    #     if i % 2 == 0:
-    #         continue
-    #     instr, dest, src = get_disassembly(view[i-1], view[i])
-    #     print(f"{instr} {dest}, {src}")
 
 
 
