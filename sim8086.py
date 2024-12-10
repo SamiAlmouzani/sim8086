@@ -84,21 +84,65 @@ def imm_to_acc(b1: str, b_list: list[int]) -> tuple[str, str, str]:
     reg, data = ('ax', f'{b_list.pop(1):08b}{b_list.pop(0):08b}') if wide == '1' else ('al', f'{b_list.pop(0):08b}') 
     return op, reg, int(data, 2)
 
-def jne(b1:str, b_list: list[int]):
-    pass
+def get_disassembly(b1: str, b_list: list[int]) -> str:
+    if b1[:4] == '1011': # mov reg, 5
+        instr, dest, src = immediate_to_reg(b1, b_list)
+        return f'{instr} {dest}, {src}'
+    if b1[:6] == '100010': # mov reg, rm
+        instr, dest, src = mov_rm_to_rm(b1, b_list)
+        return f'{instr} {dest}, {src}'
+    if b1[:2] == '00' and b1[5] == '0': # arithmetic with register/memory
+        instr, dest, src =  arith_with_rm(b1, b_list)
+        return f'{instr} {dest}, {src}'
+    if b1[:6] == '100000': # arithmetic with immediate
+        instr, dest, src = arith_with_imm(b1, b_list)
+        return f'{instr} {dest}, {src}'
+    if b1[:2] == '00' and b1[5:7] == '10':
+        instr, dest, src = imm_to_acc(b1, b_list)
+        return f'{instr} {dest}, {src}'
+    if b1 == '01110101': # jump if not equal to zero
+        return f'jnz ; {b_list.pop(0)}'
+    if b1 == '01110100': # jump on equal zero
+        return f'je ; {b_list.pop(0)}'
+    if b1 == '01111100': # jump on less
+        return f'jl ; {b_list.pop(0)}'
+    if b1 == '01111110': # jump on less/equal
+        return f'jle ; {b_list.pop(0)}'
+    if b1 == '01110010': # jump on below/not above or equal
+        return f'jb ; {b_list.pop(0)}'
+    if b1 == '01110110': # jump on below/equal not above
+        return f'jbe ; {b_list.pop(0)}'
+    if b1 == '01111010': # jump on parity/parity even
+        return f'jp ; {b_list.pop(0)}'
+    if b1 == '01110000': # jump on overflow 
+        return f'jo ; {b_list.pop(0)}'
+    if b1 == '01111000': # jump on sign
+        return f'js ; {b_list.pop(0)}'
+    if b1 == '01111101': # jump on not less/greater or equal
+        return f'jnl ; {b_list.pop(0)}'
+    if b1 == '01111111': # jump on not less or equal/greater
+        return f'jg ; {b_list.pop(0)}'
+    if b1 == '01110011': # jump on not below/above or equal
+        return f'jnb ; {b_list.pop(0)}'
+    if b1 == '01110111': # jump on not below/above or equal
+        return f'ja ; {b_list.pop(0)}'
+    if b1 == '01111011': # jump on not par/par odd
+        return f'jnp ; {b_list.pop(0)}'
+    if b1 == '01110001': # jump on not overflow
+        return f'jno ; {b_list.pop(0)}'
+    if b1 == '01111001': # jump on not sign
+        return f'jns ; {b_list.pop(0)}'
+    if b1 == '11100010': # loop cx times 
+        return f'loop ; {b_list.pop(0)}'
+    if b1 == '11100001': # loop while zero/equal
+        return f'loopz ; {b_list.pop(0)}'
+    if b1 == '11100000': # loop while not zero/equal
+        return f'loopnz ; {b_list.pop(0)}'
+    if b1 == '11100011': # loop while not zero/equal
+        return f'jcxz ; {b_list.pop(0)}'
+    raise ValueError(f'Wrong assembly instruction! instr: {b1}')
+        
 
-# def get_disassembly(b1: str, b_list: list[int]) -> tuple[str, str, str]:
-#     if b1[:4] == '1011': # mov reg, 5
-#         return immediate_to_reg(b1, b_list)
-#     if b1[:6] == '100010': # mov reg, rm
-#         return mov_rm_to_rm(b1, b_list)
-#     if b1[:2] == '00' and b1[5] == '0': # arithmetic with register/memory
-#         return arith_with_rm(b1, b_list)
-#     if b1[:6] == '100000': # arithmetic with immediate
-#         return arith_with_imm(b1, b_list)
-#     if b1[:2] == '00' and b1[5:7] == '10':
-#         return imm_to_acc(b1, b_list)
-#     raise ValueError(f'Wrong assembly instruction! instr: {b1}')
 
 if __name__ == "__main__":
     print(f"; {sys.argv[1]}")
@@ -109,89 +153,7 @@ if __name__ == "__main__":
     while b_list:
         # converts to binary and removes '0b' prefix
         b1: str = f'{b_list.pop(0):08b}'
-        if b1[:4] == '1011': # mov reg, 5
-            instr, dest, src = immediate_to_reg(b1, b_list)
-            print(f'{instr} {dest}, {src}')
-            continue
-        if b1[:6] == '100010': # mov reg, rm
-            instr, dest, src = mov_rm_to_rm(b1, b_list)
-            print(f'{instr} {dest}, {src}')
-            continue
-        if b1[:2] == '00' and b1[5] == '0': # arithmetic with register/memory
-            instr, dest, src =  arith_with_rm(b1, b_list)
-            print(f'{instr} {dest}, {src}')
-            continue
-        if b1[:6] == '100000': # arithmetic with immediate
-            instr, dest, src = arith_with_imm(b1, b_list)
-            print(f'{instr} {dest}, {src}')
-            continue
-        if b1[:2] == '00' and b1[5:7] == '10':
-            instr, dest, src = imm_to_acc(b1, b_list)
-            print(f'{instr} {dest}, {src}')
-            continue
-        if b1 == '01110101': # jump if not equal to zero
-            print(f'jnz ; {b_list.pop(0)}')
-            continue
-        if b1 == '01110100': # jump on equal zero
-            print(f'je ; {b_list.pop(0)}')
-            continue
-        if b1 == '01111100': # jump on less
-            print(f'jl ; {b_list.pop(0)}')
-            continue
-        if b1 == '01111110': # jump on less/equal
-            print(f'jle ; {b_list.pop(0)}')
-            continue
-        if b1 == '01110010': # jump on below/not above or equal
-            print(f'jb ; {b_list.pop(0)}')
-            continue
-        if b1 == '01110110': # jump on below/equal not above
-            print(f'jbe ; {b_list.pop(0)}')
-            continue
-        if b1 == '01111010': # jump on parity/parity even
-            print(f'jp ; {b_list.pop(0)}')
-            continue
-        if b1 == '01110000': # jump on overflow 
-            print(f'jo ; {b_list.pop(0)}')
-            continue
-        if b1 == '01111000': # jump on sign
-            print(f'js ; {b_list.pop(0)}')
-            continue
-        if b1 == '01111101': # jump on not less/greater or equal
-            print(f'jnl ; {b_list.pop(0)}')
-            continue
-        if b1 == '01111111': # jump on not less or equal/greater
-            print(f'jg ; {b_list.pop(0)}')
-            continue
-        if b1 == '01110011': # jump on not below/above or equal
-            print(f'jnb ; {b_list.pop(0)}')
-            continue
-        if b1 == '01110111': # jump on not below/above or equal
-            print(f'ja ; {b_list.pop(0)}')
-            continue
-        if b1 == '01111011': # jump on not par/par odd
-            print(f'jnp ; {b_list.pop(0)}')
-            continue
-        if b1 == '01110001': # jump on not overflow
-            print(f'jno ; {b_list.pop(0)}')
-            continue
-        if b1 == '01111001': # jump on not sign
-            print(f'jns ; {b_list.pop(0)}')
-            continue
-        if b1 == '11100010': # loop cx times 
-            print(f'loop ; {b_list.pop(0)}')
-            continue
-        if b1 == '11100001': # loop while zero/equal
-            print(f'loopz ; {b_list.pop(0)}')
-            continue
-        if b1 == '11100000': # loop while not zero/equal
-            print(f'loopnz ; {b_list.pop(0)}')
-            continue
-        if b1 == '11100011': # loop while not zero/equal
-            print(f'jcxz ; {b_list.pop(0)}')
-            continue
-        raise ValueError(f'Wrong assembly instruction! instr: {b1}')
-        # instr, dest, src = get_disassembly(b1, b_list)
-
+        print(get_disassembly(b1, b_list))
 
 
         
