@@ -19,10 +19,8 @@ def mode_enc(mod: str, rm: str, wide: str, b_list: list[int]) -> str:
             bit_str: str = f'{b_list.pop(1):08b}{b_list.pop(0):08b}'
             num: int = int(bit_str, 2)
             rm: str = f'[{num}]'
-        # rm = f'[{eff_addr_calc[rm]}]' if rm != '110' else f'{b_list.pop(1):08b}{b_list.pop(0):08b}'
     if mod == '01':
         dp = b_list.pop(0)
-        # rm = f'[{eff_addr_calc[rm]} + {dp}]' if dp else f'[{eff_addr_calc[rm]}]' 
         rm = f'[{eff_addr_calc[rm]} + {dp}]' 
     if mod == '10':
         dp = f'{b_list.pop(1):08b}{b_list.pop(0):08b}'
@@ -49,7 +47,6 @@ def mov_rm_to_rm(b1: str, b_list: list[int]) -> tuple[str, str, str]:
     # if mod == '01': print(f"; op_code: {b1[:6]}   dest: {dest}   wide: {wide}   mod: {mod}   reg: {reg}    rm: {rm}")
     # find register value field encoding
     reg = field_encW0[reg] if wide == '0' else field_encW1[reg] 
-    # print(f'; mod: {mod}')
     rm = mode_enc(mod, rm, wide, b_list)
     # checks the D (dest) bit to see which is dest and src
     dest, src = (reg, rm) if dest == '1' else (rm, reg)
@@ -67,13 +64,8 @@ def arith_with_imm(b1: str, b_list: list[int]) -> tuple[str, str, str]:
     mod: str = b2[:2]
     op: str = op_type[b2[2:5]]
     rm: str = b2[5:] 
-
-    # print(f'b1: {b1} and b2: {b2} and b3: {b_list.pop(0):08b}')
-    # exit()
-    # print(f"; op_code: {b1[:6]}   signed: {signed}   wide: {wide}   mod: {mod}   op: {op}  rm: {rm}")
     rm = mode_enc(mod, rm, wide, b_list)
     data: str = f'{b_list.pop(1):08b}{b_list.pop(0):08b}' if signed == '0' and wide == '1'  else f'{b_list.pop(0):08b}'
-    # print(f'; rm: {rm} and mod: {mod}')
     if mod != '11':
         rm: str = f'byte {rm}' if wide == '0' else f'word {rm}'
     return op, rm, int(data, 2)
@@ -142,8 +134,6 @@ def get_disassembly(b1: str, b_list: list[int]) -> str:
         return f'jcxz ; {b_list.pop(0)}'
     raise ValueError(f'Wrong assembly instruction! instr: {b1}')
         
-
-
 if __name__ == "__main__":
     print(f"; {sys.argv[1]}")
     print(f'bits 16\n')
