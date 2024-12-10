@@ -1,4 +1,4 @@
-import sys, io
+import sys, io, argparse
 
 field_encW0 = {'000': 'al', '001': 'cl', '010': 'dl', '011': 'bl', '100': 'ah', '101': 'ch', '110': 'dh', '111': 'bh'}
 field_encW1 = {'000': 'ax', '001': 'cx', '010': 'dx', '011': 'bx', '100': 'sp', '101': 'bp', '110': 'si', '111': 'di'}
@@ -135,9 +135,13 @@ def get_disassembly(b1: str, b_list: list[int]) -> str:
     raise ValueError(f'Wrong assembly instruction! instr: {b1}')
         
 if __name__ == "__main__":
-    print(f"; {sys.argv[1]}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-exec', action='store_true')
+    parser.add_argument('filename')
+    args = parser.parse_args()
+    print(f"; {args.filename}")
     print(f'bits 16\n')
-    bytes = read_binary(sys.argv[1])
+    bytes = read_binary(args.filename)
     b = io.BytesIO(bytes)
     b_list = b.getbuffer().tolist()
     while b_list:
