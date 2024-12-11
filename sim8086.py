@@ -5,7 +5,7 @@ field_encW1 = {'000': 'ax', '001': 'cx', '010': 'dx', '011': 'bx', '100': 'sp', 
 eff_addr_calc = {'000': 'bx + si', '001': 'bx + di', '010': 'bp + si', '011': 'bp + di', '100': 'si', '101': 'di', '110': 'bp', '111': 'bx'}
 op_type = {'000': 'add', '101': 'sub', '111': 'cmp'}
 
-regs: dict[str, int] = {}
+regs: dict[str, int] = {'ax': 0, 'bx': 0, 'cx': 0, 'dx': 0, 'sp': 0, 'bp': 0, 'si': 0, 'di': 0}
 def read_binary(file_path: str):
     with open(file_path, 'rb') as file:
         return file.read()
@@ -80,11 +80,12 @@ def imm_to_acc(b1: str, b_list: list[int]) -> tuple[str, str, str]:
 def get_disassembly(b1: str, b_list: list[int], args) -> str:
     if b1[:4] == '1011': # mov reg, 5
         instr, dest, src = immediate_to_reg(b1, b_list)
-        line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest]) if dest in regs else hex(0)}->{hex(src)}' if args.exec else f'{instr} {dest}, {src}'
+        line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest])}->{hex(src)}' if args.exec else f'{instr} {dest}, {src}'
         regs[dest] = src
         return line 
     if b1[:6] == '100010': # mov reg, rm
         instr, dest, src = mov_rm_to_rm(b1, b_list)
+        # line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest]) if dest in regs else hex(0)}->{hex(regs[src])}' if args.exec else f'{instr} {dest}, {src}'
         regs[dest] = src
         return f'{instr} {dest}, {src}'
     if b1[:2] == '00' and b1[5] == '0': # arithmetic with register/memory
@@ -154,9 +155,10 @@ if __name__ == "__main__":
         b1: str = f'{b_list.pop(0):08b}'
         line: str = get_disassembly(b1, b_list, args)
         print(line)  
-    print(f'\nFinal Registers:')
-    for k, v in regs.items():
-        print(f'\t{k}: {hex(v)} ({v})')
+    if args.exec:
+        print(f'\nFinal Registers:')
+        for k, v in regs.items():
+            print(f'\t{k}: {hex(v)} ({v})')
 
 
         
