@@ -5,6 +5,7 @@ field_encW1 = {'000': 'ax', '001': 'cx', '010': 'dx', '011': 'bx', '100': 'sp', 
 eff_addr_calc = {'000': 'bx + si', '001': 'bx + di', '010': 'bp + si', '011': 'bp + di', '100': 'si', '101': 'di', '110': 'bp', '111': 'bx'}
 op_type = {'000': 'add', '101': 'sub', '111': 'cmp'}
 
+regs: dict[str, int] = {}
 def read_binary(file_path: str):
     with open(file_path, 'rb') as file:
         return file.read()
@@ -76,12 +77,15 @@ def imm_to_acc(b1: str, b_list: list[int]) -> tuple[str, str, str]:
     reg, data = ('ax', f'{b_list.pop(1):08b}{b_list.pop(0):08b}') if wide == '1' else ('al', f'{b_list.pop(0):08b}') 
     return op, reg, int(data, 2)
 
-def get_disassembly(b1: str, b_list: list[int]) -> str:
+def get_disassembly(b1: str, b_list: list[int], args) -> str:
     if b1[:4] == '1011': # mov reg, 5
         instr, dest, src = immediate_to_reg(b1, b_list)
-        return f'{instr} {dest}, {src}'
+        line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest]) if dest in regs else hex(0)}->{hex(src)}' if args.exec else f'{instr} {dest}, {src}'
+        regs[dest] = src
+        return line 
     if b1[:6] == '100010': # mov reg, rm
         instr, dest, src = mov_rm_to_rm(b1, b_list)
+        regs[dest] = src
         return f'{instr} {dest}, {src}'
     if b1[:2] == '00' and b1[5] == '0': # arithmetic with register/memory
         instr, dest, src =  arith_with_rm(b1, b_list)
@@ -139,6 +143,7 @@ if __name__ == "__main__":
     parser.add_argument('-exec', action='store_true')
     parser.add_argument('filename')
     args = parser.parse_args()
+
     print(f"; {args.filename}")
     print(f'bits 16\n')
     bytes = read_binary(args.filename)
@@ -147,7 +152,11 @@ if __name__ == "__main__":
     while b_list:
         # converts to binary and removes '0b' prefix
         b1: str = f'{b_list.pop(0):08b}'
-        print(get_disassembly(b1, b_list))
+        line: str = get_disassembly(b1, b_list, args)
+        print(line)  
+    print(f'\nFinal Registers:')
+    for k, v in regs.items():
+        print(f'\t{k}: {hex(v)} ({v})')
 
 
         
