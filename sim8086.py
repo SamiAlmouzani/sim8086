@@ -85,9 +85,9 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         return line 
     if b1[:6] == '100010': # mov reg, rm
         instr, dest, src = mov_rm_to_rm(b1, b_list)
-        # line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest]) if dest in regs else hex(0)}->{hex(regs[src])}' if args.exec else f'{instr} {dest}, {src}'
-        regs[dest] = src
-        return f'{instr} {dest}, {src}'
+        line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest])}->{hex(regs[src])}' if args.exec else f'{instr} {dest}, {src}'
+        regs[dest] = regs[src]
+        return line
     if b1[:2] == '00' and b1[5] == '0': # arithmetic with register/memory
         instr, dest, src =  arith_with_rm(b1, b_list)
         return f'{instr} {dest}, {src}'
