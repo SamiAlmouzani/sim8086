@@ -6,6 +6,9 @@ eff_addr_calc = {'000': 'bx + si', '001': 'bx + di', '010': 'bp + si', '011': 'b
 op_type = {'000': 'add', '101': 'sub', '111': 'cmp'}
 
 regs: dict[str, int] = {'ax': 0, 'bx': 0, 'cx': 0, 'dx': 0, 'sp': 0, 'bp': 0, 'si': 0, 'di': 0}
+z_flag: int = 0
+s_flag: int = 0
+
 def read_binary(file_path: str):
     with open(file_path, 'rb') as file:
         return file.read()
@@ -78,6 +81,8 @@ def imm_to_acc(b1: str, b_list: list[int]) -> tuple[str, str, str]:
     return op, reg, int(data, 2)
 
 def get_disassembly(b1: str, b_list: list[int], args) -> str:
+    global z_flag
+    global s_flag 
     if b1[:4] == '1011': # mov reg, 5
         instr, dest, src = immediate_to_reg(b1, b_list)
         line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest])}->{hex(src)}' if args.exec else f'{instr} {dest}, {src}'
@@ -90,9 +95,47 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         return line
     if b1[:2] == '00' and b1[5] == '0': # arithmetic with register/memory
         instr, dest, src =  arith_with_rm(b1, b_list)
-        return f'{instr} {dest}, {src}'
+        result: int 
+        if args.exec:
+            if instr == 'add': result = int(regs[dest]) + int(regs[src])
+            if instr == 'sub': result = int(regs[dest]) - int(regs[src]) 
+            if instr == 'cmp': result = int(regs[dest]) - int(regs[src])
+        # set flags
+        prev_z_flag: str = '' if z_flag == 0 else 'Z'
+        prev_s_flag: str = '' if s_flag == 0 else 'S'
+        z_flag = 1 if result == 0 else 0
+        # checks if most significant bit is 1 or 0
+        bin_result: str = f'{result:08b}'
+        s_flag = int(bin_result[0])
+        curr_z_flag: str = '' if z_flag == 0 else 'Z'
+        curr_s_flag: str = '' if s_flag == 0 else 'S'
+        if instr != 'cmp':
+            line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest])}->{hex(result)} flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+        else:
+            line: str = f'{instr} {dest}, {src} ; flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+        return line
     if b1[:6] == '100000': # arithmetic with immediate
         instr, dest, src = arith_with_imm(b1, b_list)
+        result: int 
+        if args.exec:
+            if instr == 'add': result = int(regs[dest]) + int(src)
+            if instr == 'sub': result = int(regs[dest]) - int(src) 
+            if instr == 'cmp': result = int(regs[dest]) - int(src)
+        # set flags
+        prev_z_flag: str = '' if z_flag == 0 else 'Z'
+        prev_s_flag: str = '' if s_flag == 0 else 'S'
+        z_flag = 1 if result == 0 else 0
+        # checks if most significant bit is 1 or 0
+        bin_result: str = f'{result:08b}'
+        s_flag = int(bin_result[0])
+        curr_z_flag: str = '' if z_flag == 0 else 'Z'
+        curr_s_flag: str = '' if s_flag == 0 else 'S'
+        if instr != 'cmp':
+            line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest])}->{hex(result)} flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+        else:
+            line: str = f'{instr} {dest}, {src} ; flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+        return line
+
         return f'{instr} {dest}, {src}'
     if b1[:2] == '00' and b1[5:7] == '10':
         instr, dest, src = imm_to_acc(b1, b_list)
