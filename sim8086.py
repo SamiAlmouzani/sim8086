@@ -97,15 +97,21 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         instr, dest, src =  arith_with_rm(b1, b_list)
         result: int 
         if args.exec:
-            if instr == 'add': result = int(regs[dest]) + int(regs[src])
-            if instr == 'sub': result = int(regs[dest]) - int(regs[src]) 
-            if instr == 'cmp': result = int(regs[dest]) - int(regs[src])
+            if instr == 'add': 
+                result = int(regs[dest]) + int(regs[src])
+                regs[dest] = result
+            if instr == 'sub': 
+                result = int(regs[dest]) - int(regs[src]) 
+                regs[dest] = result
+            if instr == 'cmp': 
+                result = int(regs[dest]) - int(regs[src])
+                regs[dest] = result
         # set flags
         prev_z_flag: str = '' if z_flag == 0 else 'Z'
         prev_s_flag: str = '' if s_flag == 0 else 'S'
         z_flag = 1 if result == 0 else 0
         # checks if most significant bit is 1 or 0
-        bin_result: str = f'{result:08b}'
+        bin_result: str = f'{result & 0xff:08b}'
         s_flag = int(bin_result[0])
         curr_z_flag: str = '' if z_flag == 0 else 'Z'
         curr_s_flag: str = '' if s_flag == 0 else 'S'
@@ -118,15 +124,20 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         instr, dest, src = arith_with_imm(b1, b_list)
         result: int 
         if args.exec:
-            if instr == 'add': result = int(regs[dest]) + int(src)
-            if instr == 'sub': result = int(regs[dest]) - int(src) 
-            if instr == 'cmp': result = int(regs[dest]) - int(src)
+            if instr == 'add': 
+                result = int(regs[dest]) + int(src)
+                regs[dest] = result
+            if instr == 'sub': 
+                result = int(regs[dest]) - int(src) 
+                regs[dest] = result
+            if instr == 'cmp': 
+                result = int(regs[dest]) - int(src)
         # set flags
         prev_z_flag: str = '' if z_flag == 0 else 'Z'
         prev_s_flag: str = '' if s_flag == 0 else 'S'
         z_flag = 1 if result == 0 else 0
         # checks if most significant bit is 1 or 0
-        bin_result: str = f'{result:08b}'
+        bin_result: str = f'{result & 0xff:08b}'
         s_flag = int(bin_result[0])
         curr_z_flag: str = '' if z_flag == 0 else 'Z'
         curr_s_flag: str = '' if s_flag == 0 else 'S'
@@ -136,7 +147,6 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
             line: str = f'{instr} {dest}, {src} ; flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
         return line
 
-        return f'{instr} {dest}, {src}'
     if b1[:2] == '00' and b1[5:7] == '10':
         instr, dest, src = imm_to_acc(b1, b_list)
         return f'{instr} {dest}, {src}'
