@@ -99,13 +99,10 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         if args.exec:
             if instr == 'add': 
                 result = int(regs[dest]) + int(regs[src])
-                regs[dest] = result
             if instr == 'sub': 
                 result = int(regs[dest]) - int(regs[src]) 
-                regs[dest] = result
             if instr == 'cmp': 
                 result = int(regs[dest]) - int(regs[src])
-                regs[dest] = result
         # set flags
         prev_z_flag: str = '' if z_flag == 0 else 'Z'
         prev_s_flag: str = '' if s_flag == 0 else 'S'
@@ -115,21 +112,23 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         s_flag = int(bin_result[0])
         curr_z_flag: str = '' if z_flag == 0 else 'Z'
         curr_s_flag: str = '' if s_flag == 0 else 'S'
+        asm_line: str = f'{instr} {dest}, {src} ; ' 
         if instr != 'cmp':
-            line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest])}->{hex(result)} flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+            reg_info: str = f'{dest}:{hex(regs[dest])}->{hex(result)} flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+            # update dest register with new value
+            regs[dest] = result
         else:
-            line: str = f'{instr} {dest}, {src} ; flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
-        return line
+            reg_info: str = f'flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+        return asm_line + reg_info
+
     if b1[:6] == '100000': # arithmetic with immediate
         instr, dest, src = arith_with_imm(b1, b_list)
         result: int 
         if args.exec:
             if instr == 'add': 
                 result = int(regs[dest]) + int(src)
-                regs[dest] = result
             if instr == 'sub': 
                 result = int(regs[dest]) - int(src) 
-                regs[dest] = result
             if instr == 'cmp': 
                 result = int(regs[dest]) - int(src)
         # set flags
@@ -141,11 +140,14 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         s_flag = int(bin_result[0])
         curr_z_flag: str = '' if z_flag == 0 else 'Z'
         curr_s_flag: str = '' if s_flag == 0 else 'S'
+        asm_line: str = f'{instr} {dest}, {src} ; ' 
         if instr != 'cmp':
-            line: str = f'{instr} {dest}, {src} ; {dest}:{hex(regs[dest])}->{hex(result)} flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+            reg_info: str = f'{dest}:{hex(regs[dest])}->{hex(result)} flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+            # update dest register with new value
+            regs[dest] = result
         else:
-            line: str = f'{instr} {dest}, {src} ; flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
-        return line
+            reg_info: str = f'flags:{prev_s_flag}{prev_z_flag}->{curr_s_flag}{curr_z_flag}' if args.exec else f'{instr} {dest}, {src}'
+        return asm_line + reg_info
 
     if b1[:2] == '00' and b1[5:7] == '10':
         instr, dest, src = imm_to_acc(b1, b_list)
@@ -207,11 +209,13 @@ if __name__ == "__main__":
         # converts to binary and removes '0b' prefix
         b1: str = f'{b_list.pop(0):08b}'
         line: str = get_disassembly(b1, b_list, args)
+        # print(f'current flags: {s_flag}{z_flag}')
         print(line)  
     if args.exec:
         print(f'\nFinal Registers:')
         for k, v in regs.items():
             print(f'\t{k}: {hex(v)} ({v})')
+        print(f"  flags:{s_flag or ''}{z_flag or ''}")
 
 
         
