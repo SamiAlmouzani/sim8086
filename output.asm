@@ -3,12 +3,16 @@ bits 16
 
 mov bx, 61443 ; bx:0x0->0xf003
 mov cx, 3841 ; cx:0x0->0xf01
-sub bx, cx ; bx:0xf003->0xe102 flags:->
+bin_result: 1110000100000010
+sub bx, cx ; bx:0xf003->0xe102 flags:->S
 mov sp, 998 ; sp:0x0->0x3e6
 mov bp, 999 ; bp:0x0->0x3e7
-cmp bp, sp ; flags:->
-add bp, 1027 ; bp:0x3e7->0x7ea flags:->S
-sub bp, 2026 ; bp:0x7ea->0x0 flags:S->Z
+bin_result: 0000000000000001
+cmp bp, sp ; flags:S->
+bin_result: 0000011111101010
+add bp, 1027 ; bp:0x3e7->0x7ea flags:->
+bin_result: 0000000000000000
+sub bp, 2026 ; bp:0x7ea->0x0 flags:->Z
 
 Final Registers:
 	ax: 0x0 (0)

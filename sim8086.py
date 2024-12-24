@@ -108,7 +108,8 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         prev_s_flag: str = '' if s_flag == 0 else 'S'
         z_flag = 1 if result == 0 else 0
         # checks if most significant bit is 1 or 0
-        bin_result: str = f'{result & 0xff:08b}'
+        bin_result: str = f'{result:016b}'
+        print(f'bin_result: {bin_result}')
         s_flag = int(bin_result[0])
         curr_z_flag: str = '' if z_flag == 0 else 'Z'
         curr_s_flag: str = '' if s_flag == 0 else 'S'
@@ -136,7 +137,8 @@ def get_disassembly(b1: str, b_list: list[int], args) -> str:
         prev_s_flag: str = '' if s_flag == 0 else 'S'
         z_flag = 1 if result == 0 else 0
         # checks if most significant bit is 1 or 0
-        bin_result: str = f'{result & 0xff:08b}'
+        bin_result: str = f'{result:016b}'
+        print(f'bin_result: {bin_result}')
         s_flag = int(bin_result[0])
         curr_z_flag: str = '' if z_flag == 0 else 'Z'
         curr_s_flag: str = '' if s_flag == 0 else 'S'
